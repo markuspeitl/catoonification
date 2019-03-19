@@ -1,0 +1,24 @@
+<div id="mainpane">
+    <div id="navbarpane"></div>
+    <div id="headerimagepan"></div>
+    <h1>Cartoonify your Image: Start Now</h1>
+    <div id="explainationpane">
+        <a id="beforecartimagelink" href="/img/example_org_full.jpg"><img id="beforecartimage" src="img/example_org_1400.jpg" /></a>
+        <a id="aftercartimagelink" href="/img/example_cart_full.jpg"><img id="aftercartimage" src="img/example_cart_1400.jpg" /></a>
+    </div>
+    <div id="interactionpane">
+        <form id="imagesubmitform" action="/" method="post" enctype="multipart/form-data">
+            <p>Choose your image to be cartoonified and click "cartoonify now":</p>
+            <div id="buttonsholder">
+                <div id="fileinputholder">
+                    <input type="file" name="filetoupload" onchange="readURL(this);" accept=".jpg, .jpeg, .png"/>
+                </div>
+                <div id="submitholder">
+                    <input type="submit" value="cartoonify now" />
+                </div>
+            </div>
+        </form>
+    </div>
+    <div id="freescroller"></div>
+</div>
+<!-- action="sendimage" method="post" enctype="multipart/form-data"-->
