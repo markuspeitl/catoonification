@@ -10,6 +10,8 @@ parser.add_argument('dstimage',help='path of the image destination')
 
 args = parser.parse_args()
 
+print("Cartoonifyme called")
+
 img = None
 imgdestpath = None
 
@@ -251,4 +253,4 @@ if(imgdestpath):
 
 print("finished")
 
-exit(1)
+exit(0)

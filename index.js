@@ -5,8 +5,9 @@ const formidable = require('formidable');
 const app = express();
 var server = require('http').createServer(app);
 const socketio = require('socket.io')(server);
-const spawnChild = require("child_process").spawn;
+let spawnChild = require("child_process").spawn;
 const pathtools = require('path');
+const bincaller = require('./bincaller.js')
 
 const imgsuploaddir = __dirname + '/uploadedimages'
 
@@ -67,7 +68,19 @@ app.post('/', function (req, res) {
                 var pathmeta = stripExtension(name);
                 var destname = pathmeta.name + "-dst" + pathmeta.ext;
                 var destpath = imgsuploaddir + "/" + destname;
-                console.log("spawning Python script")
+
+                bincaller.regiongrow(path,destpath)
+                .then((grownpath)=>{
+                    let imagesrclink = "uploadedimages/" + name;
+                    let imagedestlink = "uploadedimages/" + destname;
+                    res.redirect("/home?imgsrc=" + imagesrclink + "&imgdst=" + imagedestlink);
+                })
+                .catch((err)=>{
+                    console.log("Error occurend when executing external binary: " + err)
+                });
+
+
+                /*console.log("spawning Python script")
                 const pythonProcess = spawnChild('python3',["cartoonifyme.py", path, destpath ]);
                 pythonProcess.stdout.on('data', (data) => {
                     console.log(data.toString('utf8'));
@@ -81,22 +94,8 @@ app.post('/', function (req, res) {
                     //res.send(JSON.stringify({"imagelink":imagelink}));
                     //res.send("localhost:3000/uploadedimages/" destname);
                     //}
-                });
+                });*/
             }
-
-            
-
-            /*if (type.indexOf('image') != -1) {
-                var outputPath = __dirname + '/multipart/' + Date.now() + '_' + name;
-
-                fs.rename(path, outputPath, function (error) {
-                    res.redirect('/');
-                });
-            } else {
-                fs.unlink(path, function (error) {
-                    res.send(400);
-                });
-            }*/
         } else {
             res.send(404);
         }

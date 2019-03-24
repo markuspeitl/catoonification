@@ -15,14 +15,19 @@ function readURL(input) {
 }
 
 var aftercartimglink = null;
+var beforecartimglink = null;
 
 $( document ).ready(function() {
     console.log( "ready!" );
 
     var urlParams = new URLSearchParams(window.location.search);
 
-    if(urlParams.has('img')){
-        aftercartimglink = urlParams.get('img');
+    if(urlParams.has('imgdst')){
+        aftercartimglink = urlParams.get('imgdst');
+    }
+
+    if(urlParams.has('imgsrc')){
+        beforecartimglink = urlParams.get('imgsrc');
     }
 
     if(aftercartimglink){
@@ -31,6 +36,13 @@ $( document ).ready(function() {
 
         $('#aftercartimagelink')
             .attr('href', aftercartimglink);
+    }
+    if(beforecartimglink){
+        $('#beforecartimage')
+            .attr('src', beforecartimglink);
+
+        $('#beforecartimagelink')
+            .attr('href', beforecartimglink);
     }
 
     /*$('#imagesubmitform')
