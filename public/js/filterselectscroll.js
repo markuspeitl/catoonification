@@ -4,7 +4,7 @@ jQuery(function($){
 	// -------------------------------------------------------------
 	//   Basic Navigation
 	// -------------------------------------------------------------
-	(function () {
+	/*(function () {
 		var $frame  = $('#basic');
 		var $slidee = $frame.children('ul').eq(0);
 		var $wrap   = $frame.parent();
@@ -104,7 +104,7 @@ jQuery(function($){
 			prev: $wrap.find('.prev'),
 			next: $wrap.find('.next')
 		});
-	}());
+	}());*/
 
 	// -------------------------------------------------------------
 	//   Force Centered Navigation
@@ -114,7 +114,8 @@ jQuery(function($){
 		var $wrap  = $frame.parent();
 
 		// Call Sly on frame
-		$frame.sly({
+		$frame.sly(
+		{
 			horizontal: 1,
 			itemNav: 'forceCentered',
 			smart: 1,
@@ -136,13 +137,30 @@ jQuery(function($){
 			// Buttons
 			prev: $wrap.find('.prev'),
 			next: $wrap.find('.next')
-		});
+		},
+		{
+			active: function(eventName,itemIndex){
+				console.log(eventName); // 'active'
+				console.log(itemIndex); // itemIndex
+				//console.log(this.pos);  // Sly position object
+				document.getElementById("hiddenfilterselection").selectedIndex = "" + itemIndex;
+			}
+		}
+		);
+
+		/*sly.on('active', function (eventName) {
+			console.log(eventName); // 'load'
+			console.log(this.pos);  // Sly position object
+		});*/
+
+
+
 	}());
 
 	// -------------------------------------------------------------
 	//   One Item Per Frame
 	// -------------------------------------------------------------
-	(function () {
+	/*(function () {
 		var $frame = $('#oneperframe');
 		var $wrap  = $frame.parent();
 
@@ -169,5 +187,5 @@ jQuery(function($){
 			prev: $wrap.find('.prev'),
 			next: $wrap.find('.next')
 		});
-	}());
+	}());*/
 });

@@ -78,6 +78,15 @@ function execfileprocpyscript(scriptlocation,sourceFile,destFile){
     return handlefileprocess(childprocess,destFile);
 }
 
+function execfileprocpyfunction(scriptlocation,functionName,sourceFile,destFile){
+    exectype = "python3";
+    if(process.platform === "win32"){
+        exectype = "python"
+    }
+    const childprocess = spawnChild(exectype,[scriptlocation, functionName, sourceFile, destFile ]);
+    return handlefileprocess(childprocess,destFile);
+}
+
 var regiongrowbin = binarylocations["RegionGrowing"]
 if(!regiongrowbin){
     console.log("regiongrowbin not in locations");
@@ -93,7 +102,13 @@ function cartoonifyme(sourceFile,destFile){
     return execfileprocpyscript("cartoonifyme.py",sourceFile,destFile);
 }
 
+function drawedges(functionName,sourceFile,destFile){
+    console.log("Calling cartoonifyme: " + sourceFile + " / " + destFile);
+    return execfileprocpyfunction("drawedges.py",functionName,sourceFile,destFile);
+}
+
 module.exports = {
     'regiongrow': regiongrow,
-    'cartoonifyme': cartoonifyme
+    'cartoonifyme': cartoonifyme,
+    'drawedges': drawedges
 }

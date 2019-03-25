@@ -3,6 +3,28 @@ import numpy as np
 import argparse
 import os
 
+parser = argparse.ArgumentParser()
+parser.add_argument('dstfilter',help='name of the filter to be executed')
+parser.add_argument('srcimage',help='path of the image to be filterd')
+parser.add_argument('dstimage',help='path of the image destination')
+
+args = parser.parse_args()
+
+print("drawedges called")
+dstfilter = None
+srcimage = None
+dstimage = None
+
+if(args.dstfilter != None):
+    dstfilter = args.dstfilter
+
+if(args.srcimage != None):
+    srcimage = args.srcimage
+
+if(args.dstimage != None):
+    dstimage = args.dstimage
+
+
 #util
 def applyimgfilter(img,applyfilter):
     #print("lowpassfilter")
@@ -130,7 +152,7 @@ def trippyfilter(img):
     mask = cv2.bitwise_and(mask1,mask2)
     return applyimgfilter(img,lambda imgchannel,shape: fourierfilter(imgchannel,shape,mask))
 
-def trippyfilter2(img,phase):
+def trippyfilter2(img):
     shape = img.shape
     windowheight = shape[0]/10
     windowwidth = shape[1]/10
@@ -155,7 +177,7 @@ def trippyfilter2(img,phase):
     mask[:,:,0] = 0
     #mask[int(mask.shape[0]/2),int(mask.shape[1]/2),0] = 0
     #mask[:,:,1] = 255
-    mask[int(mask.shape[0]/2),int(mask.shape[1]/2),1] = phase
+    mask[int(mask.shape[0]/2),int(mask.shape[1]/2),1] = 0
 
     #cv2.imshow('mask1',mask[:,:,0])
     #cv2.imshow('mask2',mask[:,:,1])
@@ -171,7 +193,7 @@ def netfilter(img):
 def noiserfilter(img):
     return applybandpassfilterpercent(img,40,60)
 
-def colblob(img):
+def colorblob(img):
     return applybandpassfilterpercent(img,0,1)
 
 def formsurfaceblobs(img):
@@ -256,7 +278,7 @@ def getHighFreqMask(img):
 
     cv2.imshow('orgcanny',newimg)
 
-    return threshenforced
+    return newimg
 
 
 
@@ -265,11 +287,37 @@ def getHighFreqMask(img):
 #    return applybandpassfilter(img,40*shape[0],40*shape[1],60*shape[0],60*shape[0])
 
 
-orgimg = cv2.imread('C:/Users/Max/Pictures/vlcsnap-error127.png')
+#orgimg = cv2.imread('C:/Users/Max/Pictures/vlcsnap-error127.png')
 #orgimg = cv2.imread('C:\\Users\\Max\\Desktop\\Costa Rica\\Phone\\20190204_100651.jpg')
+orgimg = cv2.imread(srcimage)
+
+def getFunctionByName(fnname):
+    switcher = {
+        'trippy1':trippyfilter,
+        'trippy2':trippyfilter2,
+        'directionglow':directionglow,
+        'mosaic':mosaicfilter,
+        'net':netfilter,
+        'noiser':noiserfilter,
+        'colorblob':colorblob,
+        'formsurfaceblobs':formsurfaceblobs,
+        'smallformsurfaceblobs':smallformsurfaceblobs,
+        'smallsurfaceblobs':smallsurfaceblobs,
+        'edges':getHighFreqMask
+    }
+
+    return switcher.get(fnname, lambda: "Invalid function")
+
+filter = getFunctionByName(dstfilter)
+
+dstimagebuf = filter(orgimg)
+
+if(dstimage):
+    print("writing image to path: " + dstimage)
+    cv2.imwrite(dstimage,dstimagebuf)
 
 
-shape = orgimg.shape
+"""shape = orgimg.shape
 
 cv2.namedWindow('image')
 haschanged = True
@@ -277,10 +325,10 @@ def change(x):
     global haschanged
     #print("change called")
     haschanged = True
-"""cv2.createTrackbar('highpy','image',0,shape[0],change)
-cv2.createTrackbar('highpx','image',0,shape[1],change)
-cv2.createTrackbar('lowpy','image',0,shape[0],change)
-cv2.createTrackbar('lowpx','image',0,shape[1],change)"""
+#cv2.createTrackbar('highpy','image',0,shape[0],change)
+#cv2.createTrackbar('highpx','image',0,shape[1],change)
+#cv2.createTrackbar('lowpy','image',0,shape[0],change)
+#cv2.createTrackbar('lowpx','image',0,shape[1],change)
 cv2.createTrackbar('highp','image',0,100,change)
 cv2.createTrackbar('lowp','image',0,100,change)
 
@@ -290,10 +338,10 @@ while(True):
     #print(haschanged)
     if(haschanged):
         #print("apply")
-        """highpy = cv2.getTrackbarPos('highpy','image')
-        highpx = cv2.getTrackbarPos('highpx','image')
-        lowpy = cv2.getTrackbarPos('lowpy','image')
-        lowpx = cv2.getTrackbarPos('lowpx','image')"""
+        #highpy = cv2.getTrackbarPos('highpy','image')
+        #highpx = cv2.getTrackbarPos('highpx','image')
+        #lowpy = cv2.getTrackbarPos('lowpy','image')
+        #lowpx = cv2.getTrackbarPos('lowpx','image')
         highp = cv2.getTrackbarPos('highp','image')
         lowp = cv2.getTrackbarPos('lowp','image')
 
@@ -306,7 +354,7 @@ while(True):
             #cv2.imshow('highfreq',getHighFreqMask(orgimg))
             cv2.imshow('highfreq',cv2.resize(trippyfilter2(orgimg,lowp*2.55),(int(shape[1]/2),int(shape[0]/2))))
             
-            """cv2.imshow('filteredImg',filteredImg)
+            cv2.imshow('filteredImg',filteredImg)
             enforced = cv2.filter2D(filteredImg, -1, np.ones((10,10))/50)
             enforced = cv2.filter2D(enforced, -1, np.ones((10,10))/30)
             enforced = cv2.filter2D(enforced, -1, np.ones((10,10))/50)
@@ -340,7 +388,7 @@ while(True):
             #cv2.imshow('orgcanny',newimg)
 
             #enforced = cv2.filter2D(enforced, -1, np.ones((5,5))/4)
-            #enforced = cv2.filter2D(enforced, -1, np.ones((5,5))/4)"""
+            #enforced = cv2.filter2D(enforced, -1, np.ones((5,5))/4)
             
         #channels = cv2.split(filteredImg)
         #for chann in range(0,3):
@@ -351,4 +399,4 @@ while(True):
         #print("Break loop")
         break
 
-cv2.destroyAllWindows()
+cv2.destroyAllWindows()"""

@@ -80,7 +80,7 @@
 		</div>
         -->
 		<div class="wrap">
-			<h2>Force Centered <small>- active item is always centered, and middle item is always activated</small></h2>
+			<h2>Select <small> the filter you want to use</small></h2>
 
 			<div class="scrollbar">
 				<div class="handle">
@@ -90,13 +90,9 @@
 
 			<div class="frame" id="forcecentered">
 				<ul class="clearfix">
-					<li><img src="img/example_org_1400.jpg" /></li>
-                    <li>1</li>
-                    <li>2</li>
-                    <li>3</li><li>4</li><li>5</li><li>6</li><li>7</li><li>8</li><li>9</li>
-					<li>10</li><li>11</li><li>12</li><li>13</li><li>14</li><li>15</li><li>16</li><li>17</li><li>18</li>
-					<li>19</li><li>20</li><li>21</li><li>22</li><li>23</li><li>24</li><li>25</li><li>26</li><li>27</li>
-					<li>28</li><li>29</li>
+					{{#each filters}}
+                        <li><div><img src="img/filters/{{this}}.jpg" onerror="this.style.display='none'" />{{@index}}</div><p>{{this}}</p></li>
+                    {{/each}}
 				</ul>
 			</div>
 
@@ -138,6 +134,11 @@
                 <div id="fileinputholder">
                     <input type="file" name="filetoupload" onchange="readURL(this);" accept=".jpg, .jpeg, .png"/>
                 </div>
+                <select id="hiddenfilterselection" name="selectedfilter">
+                    {{#each filters}}
+                        <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                </select>
                 <div id="submitholder">
                     <input type="submit" value="cartoonify now" />
                 </div>

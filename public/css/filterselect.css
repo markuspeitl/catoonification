@@ -9,8 +9,8 @@ body { background: #e8e8e8; }
 
 /* Frame */
 .frame {
-	height: 250px;
-	line-height: 250px;
+	height: 300px;
+	line-height: 300px;
 	overflow: hidden;
 }
 .frame ul {
@@ -18,7 +18,7 @@ body { background: #e8e8e8; }
 	margin: 0;
 	padding: 0;
 	height: 100%;
-	font-size: 50px;
+	font-size: 30px;
 }
 .frame ul li {
 	float: left;
@@ -32,8 +32,21 @@ body { background: #e8e8e8; }
 	cursor: pointer;
 }
 
+.frame ul li div{
+	height: 100px;
+}
+.frame ul li p{
+    position:absolute;
+    top:80px;
+    height: 50px;
+    width: 227px;
+    /*height: 50px;
+    margin-top: -110px;
+    padding: 0;*/
+}
+
 .frame ul li img{
-	width: 227px;
+    width: 227px;
 }
 
 .frame ul li.active {
