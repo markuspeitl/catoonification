@@ -220,7 +220,7 @@ def getEdges2(img):
     lowfreqimg = applybandpassfilterpercent(img,0,45)
     return cv2.Canny(lowfreqimg,70,180,3)
 
-def getHighFreqMask(img):
+def getEdgeMask(img):
     highfreqimg = defaulthighp(img)
     #cv2.imshow('highfreqimg',highfreqimg)
     cannyimg = cv2.Canny(highfreqimg,100,180,3)
@@ -270,15 +270,15 @@ def getHighFreqMask(img):
     cv2.imshow('reduced2',reducedcanny)
     newimg = img.copy()
     
-    reducedcanny = 1-reducedcanny/255
+    """reducedcanny = 1-reducedcanny/255
     newimg[:,:,0] = newimg[:,:,0] * reducedcanny
     newimg[:,:,1] = newimg[:,:,1] * reducedcanny
     newimg[:,:,2] = newimg[:,:,2] * reducedcanny
     #newimg[reducedcanny == 255] = 0
 
-    cv2.imshow('orgcanny',newimg)
+    cv2.imshow('orgcanny',newimg)"""
 
-    return newimg
+    return (255-reducedcanny)
 
 
 
@@ -303,7 +303,7 @@ def getFunctionByName(fnname):
         'formsurfaceblobs':formsurfaceblobs,
         'smallformsurfaceblobs':smallformsurfaceblobs,
         'smallsurfaceblobs':smallsurfaceblobs,
-        'edges':getHighFreqMask
+        'pencil':getEdgeMask
     }
 
     return switcher.get(fnname, lambda: "Invalid function")

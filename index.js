@@ -5,16 +5,34 @@ const formidable = require('formidable');
 const app = express();
 var server = require('http').createServer(app);
 const socketio = require('socket.io')(server);
-let spawnChild = require("child_process").spawn;
+var spawnChild = require("child_process").spawn;
 const pathtools = require('path');
 //const bincaller = require('./bincaller.js')
 const filtermanager = require('./filtermanager.js')
+const utilfns = require('./utilfns')
 
 const imgsuploaddir = __dirname + '/uploadedimages'
 
 const registeredFilters = ["trippy1","trippy2","directionglow","mosaic","net",
                             "noiser","colorblob","formsurfaceblobs","smallformsurfaceblobs",
-                            "smallsurfaceblobs","edges","pixelart"]
+                            "smallsurfaceblobs","pencil","colorpencil","pixelpencil","pixelart"]
+
+const filterMappingDict = {
+    "trippy1":"trippy1",
+    "trippy2":"trippy2",
+    "directionglow":"directionglow",
+    "mosaic":"mosaic",
+    "net":"net",
+    "noiser":"noiser",
+    "colorblob":"colorblob",
+    "formsurfaceblobs":"formsurfaceblobs",
+    "smallformsurfaceblobs":"smallformsurfaceblobs",
+    "smallsurfaceblobs":"smallsurfaceblobs",
+    "pencil":"pencil",
+    "pixelart":"pixelart",
+    "colorpencil":["pencil","pass"],
+    "pixelpencil":["pixelart","pencil"],
+}
 
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
@@ -34,11 +52,6 @@ app.get('/home', function (req, res) {
 app.use('/uploadedimages', express.static('uploadedimages'));
 app.use(express.static(pathtools.join(__dirname, '/public')));
 //app.use('/views',express.static('views'));
-
-function stripExtension(path){
-    var parsedPath = pathtools.parse(path)
-    return parsedPath;
-}
 
 app.post('/', function (req, res) {
     //console.log(req.files)
@@ -68,7 +81,8 @@ app.post('/', function (req, res) {
         //console.log('files: ' + JSON.stringify(files.filetoupload));
         var selectedFilter = fields['selectedfilter'];
         
-        if(registeredFilters.includes(selectedFilter)){
+        var selectedFilters = filterMappingDict[selectedFilter]
+        if(selectedFilters){
 
             var comment = fields.comment;
             var imageFile = files.filetoupload;
@@ -78,14 +92,17 @@ app.post('/', function (req, res) {
                 var type = imageFile.type;
 
                 if(path){
-                    var pathmeta = stripExtension(name);
+                    var pathmeta = utilfns.getPathMeta(name);
                     var destname = pathmeta.name + "-dst" + pathmeta.ext;
                     var destpath = imgsuploaddir + "/" + destname;
 
-                    filtermanager.callFileProcFunctionByName(selectedFilter,path,destpath)
+                    
+                    //filtermanager.callFileProcFunctionByName(selectedFilter,path,destpath)
+                    filtermanager.compose(selectedFilters,path,destpath)
                     .then((grownpath)=>{
-                        let imagesrclink = "uploadedimages/" + name;
-                        let imagedestlink = "uploadedimages/" + destname;
+                        var imagesrclink = "uploadedimages/" + name;
+                        var imagedestlink = "uploadedimages/" + destname;
+                        console.log("Redirecting client to image: " + imagedestlink)
                         res.redirect("/home?imgsrc=" + imagesrclink + "&imgdst=" + imagedestlink);
                     })
                     .catch((err)=>{

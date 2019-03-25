@@ -87,6 +87,16 @@ function execfileprocpyfunction(scriptlocation,functionName,sourceFile,destFile)
     return handlefileprocess(childprocess,destFile);
 }
 
+function execfileprocgenericpyfunction(args){
+    exectype = "python3";
+    if(process.platform === "win32"){
+        exectype = "python"
+    }
+    destFile = args[args.length-1];
+    const childprocess = spawnChild(exectype,args);
+    return handlefileprocess(childprocess,destFile);
+}
+
 var regiongrowbin = binarylocations["RegionGrowing"]
 if(!regiongrowbin){
     console.log("regiongrowbin not in locations");
@@ -103,12 +113,21 @@ function cartoonifyme(sourceFile,destFile){
 }
 
 function drawedges(functionName,sourceFile,destFile){
-    console.log("Calling cartoonifyme: " + sourceFile + " / " + destFile);
+    console.log("Calling drawedges: " + sourceFile + " / " + destFile);
     return execfileprocpyfunction("drawedges.py",functionName,sourceFile,destFile);
+}
+
+function compose(functionName,sourceFiles,destFile){
+    //console.log("Calling cartoonifyme: " + sourceFile + " / " + destFile);
+    args = ["imgcomposer.py",functionName]
+    args = args.concat(sourceFiles)
+    args.push(destFile)
+    return execfileprocgenericpyfunction(args);
 }
 
 module.exports = {
     'regiongrow': regiongrow,
     'cartoonifyme': cartoonifyme,
-    'drawedges': drawedges
+    'drawedges': drawedges,
+    'compose':compose
 }
