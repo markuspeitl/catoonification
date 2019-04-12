@@ -52,7 +52,10 @@ function compose(functionNames,srcFile,dstFile){
 
 function callFileProcFunctionByName(functionName,srcFile,dstFile){
     if(functionName === "pixelart"){
-        return bincaller.regiongrow(srcFile,dstFile);
+        return bincaller.regiongrow(srcFile,dstFile,200000);
+    }
+    if(functionName === "regiongrowf"){
+        return bincaller.regiongrow(srcFile,dstFile,1000000);
     }
     else if(drawedgesfunctions.includes(functionName)){
         return bincaller.drawedges(functionName,srcFile,dstFile);

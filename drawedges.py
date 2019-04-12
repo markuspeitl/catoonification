@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import argparse
 import os
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('dstfilter',help='name of the filter to be executed')
@@ -72,6 +73,33 @@ def fourierfilter(img,shape,mask):
 
     return img_back
 
+def fourierfiltermulti(img,shape,masks):
+    startTimer()
+    #apply discrete fourier transform
+    dft = cv2.dft(np.float32(img),flags = cv2.DFT_COMPLEX_OUTPUT)
+    #shifts zero-frequency component to center of spectrum
+    dft_shift = np.fft.fftshift(dft)
+
+    maskedSpectrums = []
+    #apply mask to remove low frequency component (only mask widow values are left alone)
+    for mask in masks:
+        maskedspectrum = dft_shift * mask
+
+    #dft_shift = cv2.bitwise_and(dft_shift,mask)
+    #unshift spectrum
+    dft = np.fft.ifftshift(dft_shift)
+    #inverse the fourier transform
+    img_back = cv2.idft(dft)
+
+    img_back = cv2.magnitude(img_back[:,:,0],img_back[:,:,1])
+    cv2.normalize(img_back, img_back, 0, 1, cv2.NORM_MINMAX)
+    img_back = (img_back * 255).astype(np.uint8)
+
+    #cv2.imshow('img_back',img_back)
+    endTimer()
+
+    return img_back
+
 def sobelFilter(img):
     #print("sobelFilter")
     img.astype(np.uint8)
@@ -90,7 +118,7 @@ def applybandpassfilterpercent(img,highppercent,lowppercentx):
     return applybandpassfilter(img,highppercent * shape[0]/200,highppercent * shape[1]/200,lowppercentx * shape[0]/200,lowppercentx * shape[1]/200)
 
 def applybandpassfilter(img,highpassy,highpassx,lowpassy,lowpassx):
-    
+
     shape = img.shape
     windowheight = shape[0]/10
     windowwidth = shape[1]/10
@@ -219,32 +247,82 @@ def getEdges(img):
 def getEdges2(img):
     lowfreqimg = applybandpassfilterpercent(img,0,45)
     return cv2.Canny(lowfreqimg,70,180,3)
+import math
+def scaleImgToPixMax(img,targetPix):
+    shape = img.shape
+    currentPix = shape[0] * shape[1]
+    if(currentPix > targetPix):
+        factor = targetPix/currentPix
+        #as the pix amount is quadratic we need to square
+        factor = math.sqrt(factor)
+        return cv2.resize(img,(int(shape[1]*factor),int(shape[0]*factor)))
+
+    return img
+
+start = 0
+end = 0
+def startTimer():
+    global start
+    start = time.time()
+
+def endTimer():
+    global start
+    global end
+    end = time.time()
+    print("Time elapsed: ")
+    print(end - start)
+
+def nextTimer():
+    endTimer()
+    startTimer()
+
 
 def getEdgeMask(img):
-    highfreqimg = defaulthighp(img)
-    #cv2.imshow('highfreqimg',highfreqimg)
-    cannyimg = cv2.Canny(highfreqimg,100,180,3)
-    cv2.imshow('cannyimg',cannyimg)
-    enforced = cv2.filter2D(cannyimg, -1, np.ones((40,40))/800)
-    cv2.imshow('enforced0',enforced)
-    enforced = cv2.filter2D(enforced, -1, np.ones((20,20))/350)
-    cv2.imshow('enforced1',enforced)
-    """enforced = cv2.filter2D(enforced, -1, np.ones((5,5))/16)
-    cv2.imshow('enforced2',enforced)
-    enforced = cv2.filter2D(enforced, -1, np.ones((3,3))/6)
-    cv2.imshow('enforced3',enforced)"""
+    doHighFreqMasking = False
+    useFFt = False
+    color = True
 
-    ret,threshenforced = cv2.threshold(enforced,100,255,cv2.THRESH_BINARY)
-    #threshenforced = cv2.erode(threshenforced,np.ones((3,3)),iterations = 1)
-    #threshenforced = cv2.dilate(threshenforced,np.ones((3,3)),iterations = 3)
-    #threshenforced = cv2.erode(threshenforced,np.ones((3,3)),iterations = 3)
-    cv2.imshow('threshenforced',threshenforced)
+    if not color:
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    #img = scaleImgToPixMax(img,1200000)
 
-    orgcanny = getEdges(img)
-    #orgcanny = cv2.Canny(img,70,200,3)
-    threshenforced = 255 - threshenforced
-    reducedcanny = cv2.bitwise_and(orgcanny,orgcanny,mask = threshenforced)
-    cv2.imshow('reduced',reducedcanny)
+    orgcanny = None
+    if useFFt:
+        orgcanny = getEdges(img)
+    else:
+        #bluredimg = img
+        bluredimg = cv2.blur(img,(4,4))
+        orgcanny = cv2.Canny(bluredimg,140,190,3)
+        #orgcanny = cv2.Canny(bluredimg,160,210,3)
+    reducedcanny = orgcanny
+
+    if doHighFreqMasking:
+        # 2.29s
+        highfreqimg = defaulthighp(img)
+        #cv2.imshow('highfreqimg',highfreqimg)
+        
+        #cv2.imshow('highfreqimg',highfreqimg)
+        cannyimg = cv2.Canny(highfreqimg,100,180,3)
+        #cv2.imshow('cannyimg',cannyimg)
+        #--------
+        #cv2.imshow('cannyimg',cannyimg)
+        enforced = cv2.filter2D(cannyimg, -1, np.ones((40,40))/800)
+        #cv2.imshow('enforced0',enforced)
+        enforced = cv2.filter2D(enforced, -1, np.ones((20,20))/350)
+        #cv2.imshow('enforced1',enforced)
+
+        ret,threshenforced = cv2.threshold(enforced,100,255,cv2.THRESH_BINARY)
+        #threshenforced = cv2.erode(threshenforced,np.ones((3,3)),iterations = 1)
+        #threshenforced = cv2.dilate(threshenforced,np.ones((3,3)),iterations = 3)
+        #threshenforced = cv2.erode(threshenforced,np.ones((3,3)),iterations = 3)
+        #cv2.imshow('threshenforced',threshenforced)
+        # 2.39s
+        threshenforced = 255 - threshenforced
+
+        reducedcanny = cv2.bitwise_and(orgcanny,orgcanny,mask = threshenforced)
+
+    #cv2.imshow('reduced',reducedcanny)
+    #----------
 
     kernel3 = np.array([[0, 1, 0],
                         [1, 4, 1],
@@ -259,15 +337,23 @@ def getEdgeMask(img):
     #reducedcanny = cv2.dilate(reducedcanny,kernelx,iterations = 1)
     reducedcanny = cv2.filter2D(reducedcanny, -1, kernel5/13)
     reducedcanny = cv2.filter2D(reducedcanny, -1, kernel3/4)
+     # 2.64s
     
-    detailCanny = getEdges2(img)
+    detailCanny = None
+    if useFFt:
+        detailCanny = getEdges2(img)
+    else:
+        bluredimg = cv2.blur(img,(3,3))
+        detailCanny = cv2.Canny(bluredimg,50,150,3)
+
     detailCanny.astype(np.float32)
     #detailCanny = cv2.filter2D(detailCanny, -1, kernel3/4)
     detailCanny = cv2.filter2D(detailCanny, -1, kernel3/4)
+     #----
 
     reducedcanny = cv2.bitwise_or(reducedcanny, detailCanny)
 
-    cv2.imshow('reduced2',reducedcanny)
+    #cv2.imshow('reduced2',reducedcanny)
     newimg = img.copy()
     
     """reducedcanny = 1-reducedcanny/255
@@ -277,6 +363,8 @@ def getEdgeMask(img):
     #newimg[reducedcanny == 255] = 0
 
     cv2.imshow('orgcanny',newimg)"""
+
+    #cv2.waitKey()
 
     return (255-reducedcanny)
 

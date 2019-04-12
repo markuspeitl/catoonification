@@ -69,6 +69,12 @@ function execfileprocbin(binaryloc,sourceFile,destFile){
     return handlefileprocess(childprocess,destFile);
 }
 
+function execfileprocbingeneric(binaryloc,args){
+    const childprocess = spawnChild(binaryloc,args);
+    var destFile = args[args.length-1];
+    return handlefileprocess(childprocess,destFile);
+}
+
 function execfileprocpyscript(scriptlocation,sourceFile,destFile){
     exectype = "python3";
     if(process.platform === "win32"){
@@ -102,9 +108,14 @@ if(!regiongrowbin){
     console.log("regiongrowbin not in locations");
     exit(4);
 }
-function regiongrow(sourceFile,destFile){
+function regiongrow(sourceFile,destFile,maxPix){
     console.log("Calling regiongrow: " + sourceFile + " / " + destFile);
-    return execfileprocbin(regiongrowbin,sourceFile,destFile);
+    var args = [sourceFile,destFile];
+    if(maxPix){
+        args.push(maxPix)
+    }
+    const childprocess = spawnChild(regiongrowbin,args);
+    return handlefileprocess(childprocess,destFile);
 }
 
 function cartoonifyme(sourceFile,destFile){

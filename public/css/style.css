@@ -91,6 +91,10 @@ h1{
     display:none;
 }
 
+#imagehash{
+    display:none;
+}
+
 @media only screen and (max-width : 1500px){
     #explainationpane img{
         width: 90%;

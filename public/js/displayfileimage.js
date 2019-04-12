@@ -1,21 +1,43 @@
-function readURL(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-
-        reader.onload = function (e) {
-            $('#beforecartimage')
-                .attr('src', e.target.result);
-
-            $('#beforecartimagelink')
-                .attr('href', e.target.result);
-        };
-
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
 var aftercartimglink = null;
 var beforecartimglink = null;
+
+var imagehash = null;
+var reader = new FileReader();
+function readURL(input) {
+    if (input.files && input.files[0]) {
+
+        var loadingImage = loadImage(
+            input.files[0],
+            function (img,data) {
+                //loadImage.parseMetaData(input.files[0], function (data) {
+                console.log(data.exif.get('Orientation'));
+                //});
+
+                if(img.type === "error") {
+                    console.log("Error loading image " + imageUrl);
+                } else {
+                    img.id = 'beforecartimage';
+                    $('#beforecartimage').replaceWith(img);
+
+                    //same as FileReader onload
+                    reader.onload = function(event){
+                        var data = event.target.result;
+                        var imagehash = CryptoJS.SHA256( data );
+                        console.log('image hash value: ' + imagehash);
+                        document.getElementById('imagehash').value = imagehash;
+                    };
+
+                    reader.readAsDataURL(input.files[0]);
+                }
+            },
+            {
+                orientation: true
+                //meta: true not needed when orientation = true
+                //maxWidth: 600
+            }
+        );
+    }
+}
 
 $( document ).ready(function() {
     console.log( "ready!" );
@@ -68,7 +90,5 @@ $( document ).ready(function() {
         e.preventDefault(); // prevent native submit
         $(this).ajaxSubmit({})
     });*/
-
-
 });
 

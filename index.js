@@ -13,9 +13,9 @@ const utilfns = require('./utilfns')
 
 const imgsuploaddir = __dirname + '/uploadedimages'
 
-const registeredFilters = ["trippy1","trippy2","directionglow","mosaic","net",
+const registeredFilters = ["pencil","pixelart","trippy1","trippy2","directionglow","mosaic","net",
                             "noiser","colorblob","formsurfaceblobs","smallformsurfaceblobs",
-                            "smallsurfaceblobs","pencil","colorpencil","pixelpencil","pixelart"]
+                            "smallsurfaceblobs","colorpencil","drawing","pixelpencil"]
 
 const filterMappingDict = {
     "trippy1":"trippy1",
@@ -32,6 +32,7 @@ const filterMappingDict = {
     "pixelart":"pixelart",
     "colorpencil":["pencil","pass"],
     "pixelpencil":["pixelart","pencil"],
+    "drawing":["regiongrowf","pencil"],
 }
 
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));

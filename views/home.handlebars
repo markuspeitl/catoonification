@@ -134,7 +134,8 @@
                 <div id="fileinputholder">
                     <input type="file" name="filetoupload" onchange="readURL(this);" accept=".jpg, .jpeg, .png"/>
                 </div>
-                <select id="hiddenfilterselection" name="selectedfilter">
+				<input id="imagehash" name="imagehash" type="text"></input>
+                <select id="hiddenfilterselection" name="selectedfilter" value="">
                     {{#each filters}}
                         <option value="{{this}}">{{this}}</option>
                     {{/each}}

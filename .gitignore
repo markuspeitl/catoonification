@@ -3,3 +3,4 @@
 uploadedimages/*
 node_modules
 __pycache__
+public/js/bower_components/

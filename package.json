@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^11.11.6",
+    "crypto-js": "^3.1.9-1",
     "express": "^4.16.4",
     "express-formidable": "^1.2.0",
     "express-handlebars": "^3.0.2",
