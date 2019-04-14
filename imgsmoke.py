@@ -155,7 +155,274 @@ def customwarp(img):
 
     return output
 
+def getMaskBounds(x,y,cols,rows):
 
+    startx = cols/2
+    starty = rows/2
+
+    height = 100
+    
+    startdist = 300
+    enddist = 100
+
+    yfactor = y/rows
+    xfactor = x/cols
+
+    invyfactor = 1 - yfactor
+
+    nwavesy = 2
+    stepy = 2 * math.pi * 1/cols * nwavesy
+    
+    stepdist = (enddist + startdist * invyfactor)
+    higherwidth = startx + stepdist/2 + int((math.sin(y*stepy))*(height)/2)
+    lowerwidth = higherwidth - stepdist
+
+    lowerheight = 0
+    higherheight = rows
+
+    return [lowerwidth,higherwidth,lowerheight,higherheight]
+
+
+def createProceduralMask(img):
+    cols, rows, ch = img.shape
+    centerx = int(rows/2)
+    centery = int(cols/2)
+
+    output = np.zeros((cols,rows),np.uint8)
+
+    for x in range(0,cols):
+        for y in range(0,rows):
+
+            boundary = getMaskBounds(x,y,cols,rows)
+                    
+            startx = cols/2
+            starty = rows/2
+
+            height = 100
+            
+            startdist = 300
+            enddist = 100
+
+            yfactor = y/rows
+            xfactor = x/cols
+
+            invyfactor = 1 - yfactor
+
+            nwavesy = 2
+            stepy = 2 * math.pi * 1/cols * nwavesy
+            
+            stepdist = (enddist + startdist * invyfactor)
+            higherwidth = startx + stepdist/2 + int((math.sin(y*stepy))*(height)/2)
+            lowerwidth = higherwidth - stepdist
+
+            lowerheight = 0
+            higherheight = rows
+
+            boundary =  [lowerwidth,higherwidth,lowerheight,higherheight]    
+
+            if(boundary != None and x > boundary[0] and x < boundary[1] and y > boundary[2] and y < boundary[3]):
+                #output[x,y] = int(255 - 255 * (xfactor+yfactor))
+                intensity = 0
+                if(xfactor < 0.5):
+                    intensity = xfactor * 2 * 255
+                else:
+                    intensity = (1 - xfactor) * 2 * 255 
+
+                output[x,y] = int(intensity)
+
+            #if(y < sinheight):
+            #    output[x,y] = 255
+
+    return output
+
+def createSinePath(startx,starty,rows,cols):
+    height = 100
+    nwaves = 2
+    xlength = 800
+    direction = [0,1]
+
+    if(xlength > cols - startx):
+        xlength = cols - startx
+    
+    linepath = []
+    
+    #stepy = 2 * math.pi * 1/cols * nwavesy
+    stepx = 2 * math.pi * 1/cols * nwaves
+
+    currentx = startx
+    currenty = starty
+
+    for x in range(startx,startx + xlength):
+        y = int(starty + math.sin((x-startx) * stepx) * height/2)#  +  direction[1] * x
+        #y = starty + int((math.sin((y-starty)*stepy))*(height)/2)
+        linepath.append([x,y])
+
+    return linepath
+
+def createSinePath2D(startx,starty,rows,cols):
+    height = 100
+    nwaves = 20
+    pathdist = 200
+    anglerad = math.pi/4
+    xdir = math.cos(anglerad)
+    ydir = math.sin(anglerad)
+    print('xdir: ' + str(xdir) + " /ydir: " + str(ydir))
+    #direction = [0,1]
+    direction = (xdir,ydir)
+
+    #if(xlength > cols - startx):
+    #    xlength = cols - startx
+    
+    linepath = []
+    
+    #stepy = 2 * math.pi * 1/cols * nwavesy
+    
+    if abs(xdir) > abs(ydir):
+        step = 2 * math.pi * 1/cols * nwaves
+        start = startx
+        end = int(start + xdir * pathdist)
+    else:
+        step = 2 * math.pi * 1/cols * nwaves
+        start = starty
+        end = int(start + ydir * pathdist)
+
+    print("step: " + str(step) + " /start: " + str(start) + " /end: " + str(end))
+
+    currentx = startx
+    currenty = starty
+    currentdist = 0
+
+    outofbounds = False
+    cnt = 0
+    while currentdist < pathdist and not outofbounds:
+        currentx = startx + cnt * xdir
+        currenty = starty + cnt * ydir
+        currentdist = math.sqrt(math.pow(currentx - startx,2) + math.pow(currenty - starty,2))
+        #print(currentdist)
+        x = currentx + int(math.sin(cnt/10) * (height/2) * ydir)
+        #y = currenty + int(math.sin(cnt)*height/2) * ydir
+        y = currenty + int(math.sin(cnt/10) * (height/2) * xdir)
+        if(currentx >= 0 and currentx < cols and currenty >= 0 and currenty < rows):
+            linepath.append([int(x),int(y)])
+        else:
+            outofbounds = True
+
+        cnt += 1
+
+    """for axisit in range(start,end):
+        #othermagnitude = int(start + math.sin((axisit-start) * step) * height/2)#  +  direction[1] * x
+        #y = starty + int((math.sin((y-starty)*stepy))*(height)/2)
+        if abs(xdir) > abs(ydir):
+            othermagnitude = int(axisit * xdir)
+            linepath.append([axisit,othermagnitude])
+        else:
+            othermagnitude = int(axisit * ydir)
+            linepath.append([othermagnitude,axisit])
+    """
+    print(linepath)
+    return linepath
+
+
+def drawPathMask(rows,cols,linepath):
+    output = np.zeros((rows,cols),np.uint8)
+
+    for point in linepath:
+        output[point[1],point[0]] = 255
+
+    cv2.imshow('pathmaskln',output)
+
+
+def createCirclularMask(ksize,cthickness=10000):
+    if(ksize % 2 is not 0):
+
+        #print('circ ksize:' + str(ksize))
+        mask = np.zeros((ksize,ksize),np.uint8)
+        centerx = int(ksize/2)
+        centery = int(ksize/2)
+        radius = int(ksize/2)
+        cv2.circle(mask,(centerx,centery),radius,255,thickness=-1)
+        if ksize > cthickness*2:
+            #print('black circle')
+            cv2.circle(mask,(centerx,centery),radius - cthickness,0,thickness=-1)
+        #cv2.imshow('mask' + str(ksize),cv2.resize(mask,(300,300)))
+        mask.astype(np.float32)
+        mask = (mask/255)/(ksize*ksize)
+        return mask
+    return None
+
+def walkPath(img,linepath):
+    rows, cols, ch = img.shape
+    output = np.zeros((rows,cols),np.uint8)
+
+    sigma = 30
+    ksizestart = 200
+    ksizeend = 40
+    startopacity = 0.01
+    endopacity = 0.0
+    opacitydiff = startopacity - endopacity
+    ksizediff = ksizestart - ksizeend
+
+    orgsample = None
+    orgGaussK = None
+    orgsampleset = False
+
+    lastksize = -1
+    pathlenx = len(linepath)
+    for x in range(0,pathlenx):
+        percentx = x/pathlenx
+        invpercentx = 1 - percentx
+        point = linepath[x]
+        currentksize = int(ksizeend + ksizediff * invpercentx)
+
+        startx = int(point[1] - currentksize/2)
+        endx = int(point[1] + currentksize/2)
+        starty = int(point[0] - currentksize/2)
+        endy = int(point[0] + currentksize/2)
+
+        if(currentksize != lastksize):
+            
+            if(not orgsampleset):
+                orgsample = img[startx:endx,starty:endy,:]
+                cv2.imshow('orgsample',orgsample)
+                orgGaussSingleX = cv2.getGaussianKernel(currentksize,sigma) * (sigma/0.4)
+                orgGaussSingleY = cv2.getGaussianKernel(currentksize,sigma) * (sigma/0.4)
+                orgGaussSingle = np.sqrt(orgGaussSingleX * orgGaussSingleY.transpose())
+                #print(orgGaussSingleX)
+                orgGaussK = np.zeros((currentksize,currentksize,3),np.float32)
+                orgGaussK[:,:,0] = orgGaussSingle
+                orgGaussK[:,:,1] = orgGaussSingle
+                orgGaussK[:,:,2] = orgGaussSingle
+                #print(orgGaussSingle)
+                orgsampleset = True
+
+            currentsample = cv2.resize(orgsample,(currentksize,currentksize))
+            currentgaussK = cv2.resize(orgGaussK,(currentksize,currentksize))
+            #print(currentgaussK)
+            #img[startx:endx,starty:endy] = (img[startx:endx,starty:endy] + currentsample)/2
+
+            kernel = np.ones((currentksize,currentksize),np.uint8) * 255
+
+            lastksize = currentksize
+
+        curropacity = endopacity + opacitydiff * invpercentx
+        invopacity = 1 - curropacity
+
+        curropacityK = curropacity * currentgaussK
+        invopacityK = 1 - curropacityK
+        #curropacityK = currentgaussK
+        #invopacityK = 1 - curropacityK
+        if(startx >= 0 and endx < rows and starty >= 0 and endy < cols):
+            img[startx:endx,starty:endy] = img[startx:endx,starty:endy] * invopacityK + currentsample * curropacityK
+            output[startx:endx,starty:endy] = kernel
+        else:
+            print(rows)
+
+
+
+    #for point in linepath:
+    #    output[point[1],point[0]] = 255
+    cv2.imshow('combimg',img)
+    cv2.imshow('pathmask',output)
 
 """orgimg = orgimg.astype(np.float32)
 
@@ -170,9 +437,18 @@ output = output.astype(np.uint8)
 
 warped = warped.astype(np.uint8)"""
 cv2.imshow('newimg',orgimg)
-cv2.imshow('bleed',multiwarp(orgimg,[10,20,30,40,50,60,70,80,90,100],2))
-cv2.imshow('customwarp',customwarp(orgimg))
-#cv2.imshow('bleed',output)
+#cv2.imshow('mask',createProceduralMask(orgimg))
+h, w, ch = orgimg.shape
+print('w:' + str(w))
+print('h:' + str(h))
+#sinepath = createSinePath(200,400,h,w)
+sinepath2d = createSinePath2D(400,300,h,w)
+#sinepath = createSinePath(530,120,h,w)
+drawPathMask(h,w,sinepath2d)
+#drawPathMask(h,w,sinepath)
+#walkPath(orgimg,sinepath)
+#cv2.imshow('bleed',multiwarp(orgimg,[10,20,30,40,50,60,70,80,90,100],2))
+#cv2.imshow('customwarp',customwarp(orgimg))
 
 cv2.waitKey()
 cv2.destroyAllWindows()
